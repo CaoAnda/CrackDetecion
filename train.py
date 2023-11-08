@@ -13,12 +13,13 @@ from config import get_args
 import torch
 from utils.train_utils import Trainer
 from colorama import init, Fore
+import socket
 
 ssl._create_default_https_context = ssl._create_unverified_context
 
 if __name__ == '__main__':
     opt = vars(get_args())
-    log_dir = f'./logs/{datetime.now().strftime("%b%d_%H_%M_%S")}-{opt["desc"]}'
+    log_dir = f'./logs/{datetime.now().strftime("%b%d_%H_%M_%S")}-{opt["desc"]}-{socket.gethostname()}'
     # os.makedirs(log_dir)
     opt['log_dir'] = log_dir
     
