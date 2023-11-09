@@ -150,6 +150,7 @@ class Dataset(data.Dataset):
             assert image.shape[:2] == label.shape, f'image.shape is {image.shape}, label.shape is {label.shape}'
             if not self.enhanced:
                 self.update_patch_pair_from_label(index, label)
+        if not self.enhanced:
                 random.shuffle(self._pair_list)
                 self.pair_list = self._pair_list
         # print(f"==>> self._pair_list.len: {len(self._pair_list)}")
