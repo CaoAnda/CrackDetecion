@@ -108,9 +108,13 @@ class Dataset(data.Dataset):
             self.dataset_dir_paths = ['./DamDataset']
 
         for dir_path in self.dataset_dir_paths:
-            filenames = sorted(os.listdir(os.path.join(dir_path, 'image')))
-            train_filenames, val_filenames = train_test_split(filenames,
-                                                              test_size=0.3,
+            if os.path.exists(os.path.join(dir_path, 'train.txt')):
+                train_filenames = [i.replace('\n', '') for i in open(os.path.join(dir_path, 'train.txt')).readlines()]
+                val_filenames = [i.replace('\n', '') for i in open(os.path.join(dir_path, 'val.txt')).readlines()]
+            else:
+                filenames = sorted(os.listdir(os.path.join(dir_path, 'image')))
+                train_filenames, val_filenames = train_test_split(filenames,
+                                                              test_size=0.2,
                                                               random_state=42)
             dataset_filenames = {
                 'train': train_filenames,
