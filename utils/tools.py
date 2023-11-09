@@ -53,6 +53,8 @@ def imread(filepath: str, flags: int, patch_size: int, expand: bool=True) -> np.
     """
     # 针对大坝数据集新标注的特判
     if not os.path.exists(filepath):
+        filepath = filepath[:-3] + 'JPG'
+    if not os.path.exists(filepath):
         filepath = filepath[:-3] + 'png'
     if flags == 0:
         image = Image.open(filepath).convert("L")
@@ -64,8 +66,8 @@ def imread(filepath: str, flags: int, patch_size: int, expand: bool=True) -> np.
     # print(f"==>> image.shape: {image.shape}")
 
     if expand:
-        image, (top, left) = expand_image(image, patch_size)
-        return image, (top, left)
+        image, (top, left, h, w) = expand_image(image, patch_size)
+        return image, (top, left, h, w)
 
     return image, None
 
@@ -93,7 +95,7 @@ def expand_image(img: np.ndarray, patch_size: int) -> np.ndarray:
     left = (new_w - img_w) // 2
     right = new_w - img_w - left
 
-    return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0, 0, 0)), (top, left)
+    return cv2.copyMakeBorder(img, top, bottom, left, right, cv2.BORDER_CONSTANT, value=(0, 0, 0)), (top, left, h, w)
 
 def get_patch_num(image: np.ndarray, patch_size) -> Tuple[int, int]:
     """返回image在高和宽上分别能够切的滑窗个数
@@ -125,6 +127,15 @@ def get_box(patch_size: int, x: int, y: int) -> Tuple[int, int, int, int]:
     
     return xmin, ymin, xmax, ymax
 
+def get_patch(image: np.ndarray, x: int, y: int, patch_size:int):
+    
+    xmin = x * patch_size
+    ymin = y * patch_size
+    xmax = xmin + patch_size
+    ymax = ymin + patch_size
+    
+    return image[ymin:ymax, xmin:xmax]
+
 class WarmupCosineSchedule(torch.optim.lr_scheduler._LRScheduler):
     def __init__(self, optimizer, warmup_epochs, total_epochs, min_lr, last_epoch=-1):
         self.warmup_epochs = warmup_epochs
@@ -140,3 +151,11 @@ class WarmupCosineSchedule(torch.optim.lr_scheduler._LRScheduler):
             progress = float(epoch - self.warmup_epochs) / float(max(1, self.total_epochs - self.warmup_epochs))
             lr_mult = max(0.0, 0.5 * (1.0 + math.cos(math.pi * progress)))
         return [max(self.min_lr, base_lr * lr_mult) for base_lr in self.base_lrs]
+
+def get_prompt(filename):
+    
+    root = './DamDataset/result/Jun02_06_33_42/box'
+    box_path = os.path.join(root, f"{filename.split('.')[0]}.txt")
+    box = list(map(int, open(box_path).readlines()[0].split()[:4]))
+    
+    return box
