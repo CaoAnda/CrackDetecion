@@ -348,8 +348,8 @@ class Dataset(data.Dataset):
         pair = self.pair_list[index]
         image = images[pair['pic_id']]
         # label = labels[pair['pic_id']]
-        patch_A = get_patch(image, *pair['a'])
-        patch_B = get_patch(image, *pair['b'])
+        patch_A = get_patch(image, *pair['a'], self.patch_size)
+        patch_B = get_patch(image, *pair['b'], self.patch_size)
         # label_A = get_patch(label, *pair['a'])
         # label_B = get_patch(label, *pair['b'])
         
