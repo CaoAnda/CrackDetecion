@@ -14,7 +14,7 @@ from tqdm import tqdm
 import sys
 from queue import Queue
 from collections import deque
-from .tools import get_box, get_patch_num, imread, expand_image
+from .tools import get_box, get_patch_num, imread, expand_image, get_patch
 import random
 
 tqdm = partial(tqdm, ncols=100, file=sys.stdout)
@@ -77,10 +77,10 @@ class Dataset(data.Dataset):
                     A.GridDistortion(p=.1),
                     # A.PiecewiseAffine(p=0.3),
                     ], p=0.2)
-        ],
-            additional_targets={
-            'label': 'image'
-        }
+            ],
+                additional_targets={
+                'label': 'image'
+            }
         )
         self.pixel_transform = A.Compose([
             A.GaussNoise(p=0.2),
@@ -104,8 +104,8 @@ class Dataset(data.Dataset):
         """初始化图片路径
         """
         # 验证集只使用大坝的验证集，不额外添加
-        if self.mode == 'val':
-            self.dataset_dir_paths = ['./DamDataset']
+        # if self.mode == 'val':
+        #     self.dataset_dir_paths = ['./DamDataset/dataV1']
 
         for dir_path in self.dataset_dir_paths:
             if os.path.exists(os.path.join(dir_path, 'train.txt')):
@@ -116,6 +116,7 @@ class Dataset(data.Dataset):
                 train_filenames, val_filenames = train_test_split(filenames,
                                                               test_size=0.2,
                                                               random_state=42)
+            
             dataset_filenames = {
                 'train': train_filenames,
                 'val': val_filenames
@@ -124,15 +125,11 @@ class Dataset(data.Dataset):
                 os.path.join(dir_path, 'image', i)
                 for i in dataset_filenames[self.mode]
             ]
-            # 针对大坝数据集新标注的特判
-            label_dir_name = 'label'
-            if os.path.exists(os.path.join(dir_path, 'new_label')):
-                label_dir_name = 'new_label'
-
             self.label_paths += [
-                os.path.join(dir_path, label_dir_name, i)
+                os.path.join(dir_path, 'label', i)
                 for i in dataset_filenames[self.mode]
             ]
+            
         print(f'mode: {self.mode}, dataset length: {len(self.image_paths)}')
 
     def image_init(self):
@@ -151,10 +148,8 @@ class Dataset(data.Dataset):
             if not self.enhanced:
                 self.update_patch_pair_from_label(index, label)
         if not self.enhanced:
-                random.shuffle(self._pair_list)
-                self.pair_list = self._pair_list
-        # print(f"==>> self._pair_list.len: {len(self._pair_list)}")
-        # print(f"==>> self.pair_list.len: {len(self.pair_list)}")
+            random.shuffle(self._pair_list)
+            self.pair_list = self._pair_list
         if self.enhanced:
             self.start_enhanced_thread(0)
     
@@ -346,31 +341,21 @@ class Dataset(data.Dataset):
 
         # 返回绘制了矩形的图像
         return output_image
-
-    def get_patch(self, image: np.ndarray, x: int, y: int):
-        
-        patch_size = self.patch_size
-        xmin = x * patch_size
-        ymin = y * patch_size
-        xmax = xmin + patch_size
-        ymax = ymin + patch_size
-        
-        return image[ymin:ymax, xmin:xmax]
     
     def __getitem__(self, index: int):
         images = self.enhanced_images if self.enhanced else self.images 
-        labels = self.enhanced_labels if self.enhanced else self.labels 
+        # labels = self.enhanced_labels if self.enhanced else self.labels 
         pair = self.pair_list[index]
         image = images[pair['pic_id']]
-        label = labels[pair['pic_id']]
-        patch_A = self.get_patch(image, *pair['a'])
-        patch_B = self.get_patch(image, *pair['b'])
-        label_A = self.get_patch(label, *pair['a'])
-        label_B = self.get_patch(label, *pair['b'])
+        # label = labels[pair['pic_id']]
+        patch_A = get_patch(image, *pair['a'])
+        patch_B = get_patch(image, *pair['b'])
+        # label_A = get_patch(label, *pair['a'])
+        # label_B = get_patch(label, *pair['b'])
         
-        sizeA = label_A.sum() / 255
+        # sizeA = label_A.sum() / 255
         # print(f"==>> sizeA: {sizeA}")
-        sizeB = label_B.sum() / 255
+        # sizeB = label_B.sum() / 255
         # print(f"==>> sizeB: {sizeB}")
         
         # cv2.imwrite('A.png', patch_A[:, :, ::-1])
