@@ -16,9 +16,9 @@ def get_args(parser=argparse.ArgumentParser()):
     parser.add_argument('--min_lr', type=float, default=1e-6) #
     parser.add_argument('--seed', type=int, default=314)
     # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
-    parser.add_argument('--enhanced', type=int, default=3) #
+    parser.add_argument('--enhanced', type=int, default=0) #
     parser.add_argument('--score_thr', type=float, default=0.5) #
-    parser.add_argument('--dataset_dir_paths', nargs='+', type=str, default=['./DamDataset'])
+    parser.add_argument('--dataset_dir_paths', nargs='+', type=str, default=['./DamDataset/dataV1'])
     parser.add_argument('--test4lr', type=int, default=0) #
     parser.add_argument('--desc', type=str, required=True)
     parser.add_argument('--output', action='store_true', default=True)  
