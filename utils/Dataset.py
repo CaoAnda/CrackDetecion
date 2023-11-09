@@ -59,8 +59,8 @@ class Dataset(data.Dataset):
         self.enhanced = False if mode == 'val' else enhanced
         self.transform = transforms.Compose([
             transforms.ToTensor(),
-            transforms.Normalize(mean=(0.5990, 0.6012, 0.5874),
-                                 std=(0.0383, 0.0380, 0.0374)),
+            transforms.Normalize(mean=(0.6121, 0.6286, 0.6258),
+                                 std=(0.0358, 0.0367, 0.0370)),
         ])
         self.enhanced_thread = None
         # 使用不同的变量，尝试解决死锁问题
