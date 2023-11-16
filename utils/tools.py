@@ -152,10 +152,11 @@ class WarmupCosineSchedule(torch.optim.lr_scheduler._LRScheduler):
             lr_mult = max(0.0, 0.5 * (1.0 + math.cos(math.pi * progress)))
         return [max(self.min_lr, base_lr * lr_mult) for base_lr in self.base_lrs]
 
-def get_prompt(filename):
-    
-    root = './DamDataset/result/Jun02_06_33_42/box'
-    box_path = os.path.join(root, f"{filename.split('.')[0]}.txt")
-    box = list(map(int, open(box_path).readlines()[0].split()[:4]))
-    
-    return box
+def get_prompt(filename, root):
+    try:
+        box_path = os.path.join(root, f"{filename.split('.')[0]}.txt")
+        box = list(map(int, open(box_path).readlines()[0].split()[:4]))
+        
+        return box
+    except:
+        return [0, 0, 64, 64]
