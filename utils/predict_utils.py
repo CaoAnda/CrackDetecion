@@ -34,9 +34,9 @@ class Predicter():
         connected_thr : float, optional
             判断连通的阈值, by default 0.5
         """
+        self.__dict__.update(self.config_init(log_path))
         self.device = torch.device(
             device if torch.cuda.is_available() else 'cpu')
-        self.__dict__.update(self.config_init(log_path))
         self.model = self.model_init(log_path)
         self.conf_thr = conf_thr
         self.transform = transforms.Compose([
@@ -69,7 +69,7 @@ class Predicter():
         model.load_state_dict(
             torch.load(
                 os.path.join(log_path, 'weights',
-                             f'model_acc.pkl')))
+                             f'model_acc.pkl'), map_location=self.device))
         model.eval()
         return model
 
@@ -107,19 +107,36 @@ class Predicter():
         xmax += left
         ymin += top
         ymax += top
-        patch_prompt = self.transform(expand_image[ymin:ymax, xmin:xmax]).unsqueeze(0).to(self.device)
         
-        for y in range(patch_h):
-            for x in range(patch_w):
-                patch_pred = self.transform(get_patch(expand_image, x, y, self.patch_size)).unsqueeze(0).to(self.device)
-                
-                with torch.no_grad():
-                    similarity = self.model(patch_prompt, patch_pred).item()
-                    
-                if similarity >= self.conf_thr:
+        
+        # self.draw_boxes_on_image(expand_image, [], [], [xmin, ymin, xmax, ymax]).save('tmp.png')
+        batch_size = 256
+        batch_indexes_list = [
+            [x, y] for y in range(patch_h) for x in range(patch_w)
+        ]
+        list_len = len(batch_indexes_list)
+        patch_prompt = self.transform(expand_image[ymin:ymax, xmin:xmax]).unsqueeze(0)
+        
+        for s in range(0, list_len, batch_size):
+            batchA = []
+            batchB = []
+            # print(f"==>> batch_indexes_list[s:min(list_len, s + batch_size)]: {batch_indexes_list[s:min(list_len, s + batch_size)]}")
+            
+            for x, y in batch_indexes_list[s:min(list_len, s + batch_size)]:
+                patch_pred = self.transform(get_patch(expand_image, x, y, self.patch_size)).unsqueeze(0)
+                batchA.append(patch_prompt)
+                batchB.append(patch_pred)
+            batchA = torch.cat(batchA, dim=0).to(self.device)
+            batchB = torch.cat(batchB, dim=0).to(self.device)
+            with torch.no_grad():
+                similarities = self.model(batchA, batchB)
+                # print(f"==>> similarities: {similarities}")
+            for index in range(len(similarities)):
+                x, y = batch_indexes_list[s:min(list_len, s + batch_size)][index]
+                if similarities[index] > self.conf_thr:
                     boxes.append(get_box(self.patch_size, x, y))
-                    probs.append(similarity)
-                    
+                    probs.append(similarities[index].item())
+
         return boxes, probs
 
     def predict_path(self, path: str, prompt_bbox: list, outpath: str = ""):
@@ -143,6 +160,7 @@ class Predicter():
         
         boxes, probs = self.predict_image(image, prompt_bbox, top, left)
         boxes = [self.boxes_update(*box, top, left, h, w) for box in boxes]
+        # boxes, probs = self.filter_connected_boxes(boxes, probs, n_limit=3)
         
         if outpath:
             result_image = self.draw_boxes_on_image(_image,
@@ -166,8 +184,7 @@ class Predicter():
         text_y = y_min + stroke_width
         draw.rectangle([
             text_x, text_y, text_x + text_width, text_y + text_height
-        ],
-                        fill=color)
+        ], fill=color)
         draw.text((text_x, text_y), prob_text, fill="white")
     
     def draw_boxes_on_image(self,
@@ -198,7 +215,43 @@ class Predicter():
             self.draw_box_on_image(draw, box, prob, 'red')
         
         if prompt_bbox:
-            self.draw_box_on_image(draw, prompt_bbox, 1, color='gray')
+            self.draw_box_on_image(draw, prompt_bbox, 1, color='green')
 
         # 返回绘制后的新图像
         return image_pil
+
+    def filter_connected_boxes(self, crack_boxes, crack_probs, n_limit):
+        connected_blocks = []
+        visited_boxes = [False] * len(crack_boxes)
+
+        # 定义一个函数，用于深度优先搜索遍历连通块
+        def dfs(box_index, connected_block):
+            visited_boxes[box_index] = True
+            connected_block.append(box_index)
+            xmin, ymin, xmax, ymax = crack_boxes[box_index]
+
+            # 遍历其他未访问过的检测框，如果相邻则加入连通块
+            for i in range(len(crack_boxes)):
+                if not visited_boxes[i]:
+                    x_min, y_min, x_max, y_max = crack_boxes[i]
+                    if x_min <= xmax and x_max >= xmin and y_min <= ymax and y_max >= ymin:
+                        dfs(i, connected_block)
+
+        # 遍历所有的检测框，构建连通块
+        for i in range(len(crack_boxes)):
+            if not visited_boxes[i]:
+                connected_block = []
+                dfs(i, connected_block)
+                connected_blocks.append(connected_block)
+
+        # 筛除检测框个数少于等于 n_limit 的连通块
+        filtered_blocks = []
+        for block in connected_blocks:
+            if len(block) > n_limit:
+                filtered_blocks.append(block)
+
+        # 构建筛选后的检测框和置信度列表
+        filtered_boxes = [crack_boxes[i] for block in filtered_blocks for i in block]
+        filtered_probs = [crack_probs[i] for block in filtered_blocks for i in block]
+
+        return filtered_boxes, filtered_probs
