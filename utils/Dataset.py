@@ -46,6 +46,7 @@ class Dataset(data.Dataset):
             是否进行数据增强, by default False
         """
         super().__init__()
+        self.__dict__.update(args)
         self.image_paths = []
         self.label_paths = []
         self.mode = mode
@@ -116,6 +117,10 @@ class Dataset(data.Dataset):
                 train_filenames, val_filenames = train_test_split(filenames,
                                                               test_size=0.2,
                                                               random_state=42)
+                for mode in ['train', 'val']:
+                    with open(os.path.join(dir_path, f'{mode}.txt'), "w+") as file:
+                        for i in eval(f'{mode}_filenames'):
+                            file.write(i+'\n')
             
             dataset_filenames = {
                 'train': train_filenames,
@@ -215,8 +220,9 @@ class Dataset(data.Dataset):
         len_crack_patch_list = len(crack_patch_list)
         len_background_patch_list = len(background_patch_list)
         length = min(len_crack_patch_list, len_background_patch_list)
-        sample_times = 5
-        for _ in range(length*sample_times):
+        
+        random.seed(index)
+        for _ in range(length*self.sample_times):
             
             get_pair = lambda index, lista, listb, sim: {
                 'pic_id': index,
