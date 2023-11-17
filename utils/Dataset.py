@@ -14,7 +14,7 @@ from tqdm import tqdm
 import sys
 from queue import Queue
 from collections import deque
-from .tools import get_box, get_patch_num, imread, expand_image, get_patch
+from .tools import get_box, get_patch_num, imread, expand_image, get_patch, judge_crack
 import random
 
 tqdm = partial(tqdm, ncols=100, file=sys.stdout)
@@ -208,11 +208,7 @@ class Dataset(data.Dataset):
         
         for y in range(h):
             for x in range(w):
-                xmin = x * patch_size
-                ymin = y * patch_size
-                xmax = xmin + patch_size
-                ymax = ymin + patch_size
-                if self.cal_crack_size(label_image, xmin, ymin, xmax, ymax) >= 40:
+                if judge_crack(label_image, x, y, patch_size):
                     crack_patch_list.append([x, y])
                 else:
                     background_patch_list.append([x, y])
@@ -284,37 +280,6 @@ class Dataset(data.Dataset):
             str: 表示数据增广进度的字符串.
         """
         return f"{len(self._enhanced_images)} / {len(self.image_paths)}"
-
-    def cal_crack_size(self, label_image: np.ndarray, xmin: int, ymin: int,
-                       xmax: int, ymax: int) -> float:
-        """
-        计算裂缝切片像素个数
-
-        Parameters
-        ----------
-        label_image : np.ndarray
-            原标注图像
-        xmin : int
-            左上角x坐标
-        ymin : int
-            左上角y坐标
-        xmax : int
-            右下角x坐标
-        ymax : int
-            右下角y坐标
-
-        Returns
-        -------
-        float
-            裂缝像素个数
-        """
-        h, w = label_image.shape
-
-        if xmin < 0 or ymin < 0 or xmax > w or ymax > h:
-            return 0
-
-        box = label_image[ymin:ymax, xmin:xmax]
-        return box.sum() // 255
 
     def draw_rectangles(self, image: np.ndarray,
                         rectangles: list) -> np.ndarray:

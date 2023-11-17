@@ -160,3 +160,44 @@ def get_prompt(filename, root):
         return box
     except:
         return [0, 0, 64, 64]
+
+def cal_crack_size(label_image: np.ndarray, xmin: int, ymin: int,
+                    xmax: int, ymax: int) -> float:
+    """
+    计算裂缝切片像素个数
+
+    Parameters
+    ----------
+    label_image : np.ndarray
+        原标注图像
+    xmin : int
+        左上角x坐标
+    ymin : int
+        左上角y坐标
+    xmax : int
+        右下角x坐标
+    ymax : int
+        右下角y坐标
+
+    Returns
+    -------
+    float
+        裂缝像素个数
+    """
+    h, w = label_image.shape
+
+    if xmin < 0 or ymin < 0 or xmax > w or ymax > h:
+        return 0
+
+    box = label_image[ymin:ymax, xmin:xmax]
+    
+    return box.sum() // 255
+
+def judge_crack(label_image:np.ndarray, x:int, y:int, patch_size:int):
+    
+    xmin = x * patch_size
+    ymin = y * patch_size
+    xmax = xmin + patch_size
+    ymax = ymin + patch_size
+    
+    return cal_crack_size(label_image, xmin, ymin, xmax, ymax) >= 40

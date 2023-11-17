@@ -220,6 +220,8 @@ class Trainer():
                 self.best_val_score[key] = val_score[key]
                 torch.save(self.model.state_dict(),
                            os.path.join(save_dir, f'model_{key}.pkl'))
+        torch.save(self.model.state_dict(),
+                           os.path.join(save_dir, f'model_last.pkl'))
 
     def run_train_val_epoch(self, epoch: int):
         """模型完成一个epoch的训练和验证, 记录日志并保存最优权重
