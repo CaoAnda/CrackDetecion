@@ -4,7 +4,7 @@ def get_args(parser=argparse.ArgumentParser()):
     # model
     parser.add_argument('--backbone_model', type=str, default='resnet18') # resnet18, resnet34, resnet50, swin_t, swin_s...
     parser.add_argument('--backbone_pretrained', type=int, default=1) #
-    parser.add_argument('--weight_decay', type=float, default=0) #
+    parser.add_argument('--weight_decay', type=float, default=1e-4) #
     
     # optimizer
     parser.add_argument('--batch_size', type=int, default=128)
@@ -16,16 +16,16 @@ def get_args(parser=argparse.ArgumentParser()):
     
     # dataset
     parser.add_argument('--patch_size', type=int, default=64)
-    parser.add_argument('--enhanced', type=int, default=0) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+    parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
     parser.add_argument('--sample_times', type=int, default=5) #
-    parser.add_argument('--dataset_dir_paths', nargs='+', type=str, default=['./DamDataset/dataV1'])
+    parser.add_argument('--dataset_dir_paths', nargs='+', type=str, default=['./DamDataset/dataV1/dataV1'])
     
     # misc
     parser.add_argument('--gpus', nargs='+', type=int, default=[0, 1])
     parser.add_argument('--seed', type=int, default=314)
     parser.add_argument('--score_thr', type=float, default=0.5) #
     parser.add_argument('--test4lr', type=int, default=0) #
-    parser.add_argument('--desc', type=str, required=True)
+    parser.add_argument('--desc', type=str, default=True)
     parser.add_argument('--output', action='store_true', default=True)  
 
     opt = parser.parse_args()  

@@ -27,6 +27,7 @@ class Dataset(data.Dataset):
                  mode: str,
                  dataset_dir_paths: list[str],
                  patch_size: int = 64,
+                 background_sample: float = 2,
                  enhanced=0,
                  **args) -> None:
         """
@@ -40,6 +41,8 @@ class Dataset(data.Dataset):
             数据集的根路径
         patch_size : int, optional
             切片大小, by default 64
+        background_sample : float, optinal
+            背景采样, by default 1
         seq_len : int, optional
             生成的序列长度, by default 8
         enhanced : bool, optional
@@ -51,6 +54,7 @@ class Dataset(data.Dataset):
         self.label_paths = []
         self.mode = mode
         self.patch_size = patch_size
+        self.background_sample = background_sample
         self.dataset_dir_paths = dataset_dir_paths
         self.images = []
         self.labels = []
@@ -215,22 +219,47 @@ class Dataset(data.Dataset):
         
         len_crack_patch_list = len(crack_patch_list)
         len_background_patch_list = len(background_patch_list)
-        length = min(len_crack_patch_list, len_background_patch_list)
+        # length = min(len_crack_patch_list, len_background_patch_list)
         
-        random.seed(index)
-        for _ in range(length*self.sample_times):
+        # random.seed(index)
+        # for _ in range(length*self.sample_times):
             
-            get_pair = lambda index, lista, listb, sim: {
+        #     get_pair = lambda index, lista, listb, sim: {
+        #         'pic_id': index,
+        #         'a': lista[random.randint(0, len(lista)-1)],
+        #         'b': listb[random.randint(0, len(listb)-1)],
+        #         'sim': sim
+        #     } 
+            
+        #     self._pair_list.append(get_pair(index, crack_patch_list, crack_patch_list, 1))
+        #     self._pair_list.append(get_pair(index, crack_patch_list, background_patch_list, 0))
+        #     self._pair_list.append(get_pair(index, background_patch_list, crack_patch_list, 0))
+        #     self._pair_list.append(get_pair(index, background_patch_list, background_patch_list, 1))
+
+        random.seed(index)
+        for x in range(len_crack_patch_list):
+            
+            get_pair = lambda index, lista, sim: {
                 'pic_id': index,
-                'a': lista[random.randint(0, len(lista)-1)],
-                'b': listb[random.randint(0, len(listb)-1)],
+                'a': lista[x],
                 'sim': sim
             } 
             
-            self._pair_list.append(get_pair(index, crack_patch_list, crack_patch_list, 1))
-            self._pair_list.append(get_pair(index, crack_patch_list, background_patch_list, 0))
-            self._pair_list.append(get_pair(index, background_patch_list, crack_patch_list, 0))
-            self._pair_list.append(get_pair(index, background_patch_list, background_patch_list, 1))
+            self._pair_list.append(get_pair(index, crack_patch_list, 1))
+
+        len_standard = len_crack_patch_list*self.background_sample
+        len_background_sample = min(len_standard , len_background_patch_list)
+        for _ in range(len_background_sample*self.sample_times):
+            
+            get_pair = lambda index, lista, sim: {
+                'pic_id': index,
+                'a': lista[random.randint(0, len(lista)-1)],
+                'sim': sim
+            } 
+            
+            self._pair_list.append(get_pair(index, background_patch_list, 0))        
+
+
         
     def update_enhanced_images(self, epoch: int, enhanced: int):
         """更新数据增强的图像
@@ -320,7 +349,7 @@ class Dataset(data.Dataset):
         image = images[pair['pic_id']]
         # label = labels[pair['pic_id']]
         patch_A = get_patch(image, *pair['a'], self.patch_size)
-        patch_B = get_patch(image, *pair['b'], self.patch_size)
+        # patch_B = get_patch(image, *pair['b'], self.patch_size)
         # label_A = get_patch(label, *pair['a'])
         # label_B = get_patch(label, *pair['b'])
         
@@ -337,7 +366,7 @@ class Dataset(data.Dataset):
         sim = pair['sim']
         # print(f"==>> sim: {sim}")
         # print(f"==>> sim: {sim}")
-        return self.transform(patch_A), self.transform(patch_B), torch.tensor(sim).float().unsqueeze(0)
+        return self.transform(patch_A),  torch.tensor(sim).float().unsqueeze(0)
 
     def __len__(self):
         return len(self.pair_list)

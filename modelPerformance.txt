@@ -1,0 +1,186 @@
+使用tensorboard的时候需要在命令行前加入
+export CRYPTOGRAPHY_OPENSSL_NO_LEGACY=1
+
+
+
+config
+
+    # model
+    parser.add_argument('--backbone_model', type=str, default='resnet18') # resnet18, resnet34, resnet50, swin_t, swin_s...
+    parser.add_argument('--backbone_pretrained', type=int, default=1) #
+    parser.add_argument('--weight_decay', type=float, default=0) #
+    
+    # optimizer
+    parser.add_argument('--batch_size', type=int, default=128)
+    parser.add_argument('--num_workers', type=int, default=4)
+    parser.add_argument('--epochs', type=int, default=24)
+    parser.add_argument('--optim', type=str, default='Adam') #
+    parser.add_argument('--init_lr', type=float, default=1e-4) #
+    parser.add_argument('--min_lr', type=float, default=1e-6) #
+    
+    # dataset
+    parser.add_argument('--patch_size', type=int, default=64)
+    parser.add_argument('--enhanced', type=int, default=0) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+    parser.add_argument('--sample_times', type=int, default=5) #
+    parser.add_argument('--dataset_dir_paths', nargs='+', type=str, default=['./DamDataset/dataV1/dataV1'])
+    
+    # misc
+    parser.add_argument('--gpus', nargs='+', type=int, default=[0, 1])
+    parser.add_argument('--seed', type=int, default=314)
+    parser.add_argument('--score_thr', type=float, default=0.5) #
+    parser.add_argument('--test4lr', type=int, default=0) #
+    parser.add_argument('--desc', type=str, required=True)
+    parser.add_argument('--output', action='store_true', default=True) 
+
+log_dir = "Nov23_14_47_43-True-VIPA207"
+performance = 
+{'TP': 1342, 'FP': 1792, 'TN': 47162, 'FN': 1174, 'acc': 0.9423741985622693, 'precision': 0.4282067645181876, 'recall': 0.5333863275039745, 'f1score': 0.4750442477876106}
+
+
+
+config
+
+    变动：parser.add_argument('--enhanced', type=int, default=1) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+
+log_dir = "Nov24_21_31_54-True-VIPA207"
+performance = 
+{'TP': 1019, 'FP': 801, 'TN': 48153, 'FN': 1497, 'acc': 0.9553526326015155, 'precision': 0.5598901098901099, 'recall': 0.4050079491255962, 'f1score': 0.47001845018450183}
+
+
+config
+
+    变动：parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+
+log_dir = "Nov26_21_52_23-True-VIPA207"
+performance = 
+{'TP': 1214, 'FP': 1218, 'TN': 47736, 'FN': 1302, 'acc': 0.9510394404507481, 'precision': 0.49917763157894735, 'recall': 0.4825119236883943, 'f1score': 0.4907033144704931}
+
+
+config
+
+    变动:parser.add_argument('--weight_decay', type=float, default=1e-4) 
+        parser.add_argument('--enhanced', type=int, default=0) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+
+log_dir = "Nov29_11_30_19-True-VIPA207"
+performance = 
+{'TP': 1232, 'FP': 1275, 'TN': 47679, 'FN': 1284, 'acc': 0.950281717505343, 'precision': 0.49142401276426007, 'recall': 0.48966613672496023, 'f1score': 0.49054349990045787}
+
+
+config
+
+    变动:parser.add_argument('--weight_decay', type=float, default=1e-4) 
+        parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+
+log_dir = "Nov29_15_33_18-True-VIPA207"
+performance =  
+{'TP': 1233, 'FP': 1223, 'TN': 47731, 'FN': 1283, 'acc': 0.9513114435593549, 'precision': 0.5020358306188925, 'recall': 0.4900635930047695, 'f1score': 0.49597747385358}  
+
+
+config
+    变动:增加dropout层
+        def forward(self,A,*args):
+        x = self.backbone(A)
+        x = self.fl(x)
+        x = self.fc1(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        x = torch.sigmoid(x)
+        return x 
+        parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+
+log_dir = "Dec01_19_57_24-True-VIPA207"
+performance =
+{'TP': 1204, 'FP': 1010, 'TN': 47944, 'FN': 1312, 'acc': 0.9548863415581892, 'precision': 0.5438121047877146, 'recall': 0.4785373608903021, 'f1score': 0.509090909090909}
+
+
+config
+    变动:增加dropout层
+        def forward(self,A,*args):
+        x = self.backbone(A)
+        x = self.fl(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.dropout(x)
+        x = torch.sigmoid(x)
+        return x 
+        parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+
+log_dir = "Dec02_11_59_45-True-VIPA207"
+performance =
+{'TP': 1337, 'FP': 1357, 'TN': 47597, 'FN': 1179, 'acc': 0.9507285797551972, 'precision': 0.4962880475129918, 'recall': 0.5313990461049285, 'f1score': 0.5132437619961613}
+
+
+config
+    变动:增加bn层
+        def forward(self,A,*args):
+        x = self.backbone(A)
+        x = self.bn(x)
+        x = self.fl(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = torch.sigmoid(x)
+        return x 
+        parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+
+log_dir = "Dec02_20_25_47-True-VIPA207"
+performance =
+{'TP': 1475, 'FP': 2268, 'TN': 46686, 'FN': 1041, 'acc': 0.9357101224013988, 'precision': 0.3940689286668448, 'recall': 0.5862480127186009, 'f1score': 0.47132129733184214}
+
+
+config
+    变动:增加bn层
+        def forward(self,A,*args):
+        x = self.backbone(A)
+        x = self.bn(x)
+        x = self.fl(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = torch.sigmoid(x)
+        return x 
+        parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+        
+        background 和 crack 比例 2：1（原本1：1）
+
+log_dir = "Dec03_12_51_41-True-VIPA207"
+performance =
+{'TP': 673, 'FP': 319, 'TN': 48635, 'FN': 1843, 'acc': 0.9579949485136973, 'precision': 0.6784274193548387, 'recall': 0.2674880763116057, 'f1score': 0.3836944127708096}
+
+
+
+config
+    变动：更换网络为mobilenet_v3_small
+    parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+    background 和 crack 比例 2：1（原本1：1）
+
+log_dir = "Dec04_22_52_23-True-VIPA207"
+performance =
+{'TP': 1007, 'FP': 962, 'TN': 47992, 'FN': 1509, 'acc': 0.9519914513308724, 'precision': 0.5114271203656678, 'recall': 0.4002384737678855, 'f1score': 0.4490523968784838}
+
+
+config
+    变动：更换网络为squeezenet1_0
+    parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+    background 和 crack 比例 2：1（原本1：1）
+
+log_dir = "Dec05_10_35_03-True-VIPA207"
+performance =
+{'TP': 1007, 'FP': 962, 'TN': 47992, 'FN': 1509, 'acc': 0.9519914513308724, 'precision': 0.5114271203656678, 'recall': 0.4002384737678855, 'f1score': 0.4490523968784838}
+
+
+config
+    变动：增加dropout层
+        def forward(self,A,*args):
+        x = self.backbone(A)
+        # x = self.bn(x)
+        x = self.fl(x)
+        x = self.fc1(x)
+        x = self.fc2(x)
+        x = self.dropout(x)
+        x = torch.sigmoid(x)
+        parser.add_argument('--weight_decay', type=float, default=1e-4)##L2正则化
+        parser.add_argument('--enhanced', type=int, default=3) # 0, 1(spacial), 2(pixel), 3(spacial+pixel)
+        background 和 crack 比例 2：1（原本1：1）
+        self.criterion = nn.CrossEntropyLoss(smoothing=0.1)##修改损失函数为label smoothing
+        parser.add_argument('--init_lr', type=float, default=1e-6)
+
+

@@ -3,6 +3,7 @@ import os
 from typing import Tuple
 import cv2
 import numpy as np
+from sklearn.model_selection import train_test_split
 import torch
 from torch.nn.utils.rnn import pad_sequence, pack_padded_sequence, pad_packed_sequence
 from PIL import Image, ImageOps
@@ -160,6 +161,54 @@ def get_prompt(filename, root):
         return box
     except:
         return [0, 0, 64, 64]
+
+def get_dataset_pathes(dir_path:str, mode:str):
+    """
+    获取数据集的文件路径
+
+    Parameters
+    ----------
+    dir_path : str
+        数据集根目录
+    mode : str
+        数据集子集，train or val
+
+    Returns
+    -------
+    tuple[list, list]
+        图像文件路径列表，标注文件路径列表
+    """
+    if os.path.exists(os.path.join(dir_path, 'train.txt')):
+        train_filenames = [i.replace('\n', '') for i in open(os.path.join(dir_path, 'train.txt')).readlines()]
+        val_filenames = [i.replace('\n', '') for i in open(os.path.join(dir_path, 'val.txt')).readlines()]
+    else:
+        filenames = sorted(os.listdir(os.path.join(dir_path, 'image')))
+        train_filenames, val_filenames = train_test_split(filenames,
+                                                        test_size=0.2,
+                                                        random_state=42)
+        for mode in ['train', 'val']:
+            with open(os.path.join(dir_path, f'{mode}.txt'), "w+") as file:
+                for i in eval(f'{mode}_filenames'):
+                    file.write(i+'\n')
+    
+    dataset_filenames = {
+        'train': train_filenames,
+        'val': val_filenames
+    }
+    
+    image_paths = []
+    label_paths = []
+    
+    image_paths += [
+        os.path.join(dir_path, 'image', i)
+        for i in dataset_filenames[mode]
+    ]
+    label_paths += [
+        os.path.join(dir_path, 'label', i)
+        for i in dataset_filenames[mode]
+    ]
+    
+    return image_paths, label_paths
 
 def cal_crack_size(label_image: np.ndarray, xmin: int, ymin: int,
                     xmax: int, ymax: int) -> float:

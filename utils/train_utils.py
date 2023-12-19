@@ -71,7 +71,8 @@ class Trainer():
         self.device = device
         self.epochs = epochs
         self.score_thr = score_thr
-        self.criterion = nn.MSELoss()
+        # self.criterion = nn.MSELoss()
+        self.criterion = nn.BCELoss()
         self.optimizer = getattr(torch.optim, optim)(self.model.parameters(),
                                                      lr=init_lr,
                                                      weight_decay=weight_decay)
@@ -115,14 +116,14 @@ class Trainer():
         gross = 0
         correct = 0
         iters = len(loader)
-        for index, (A, B, labels) in enumerate(tqdm_bar):
+        for index, (A, labels) in enumerate(tqdm_bar):
             now_time = time.time()
 
             A = A.to(device)
-            B = B.to(device)
+            # B = B.to(device)
             labels = labels.to(device)
-
-            outputs = self.model(A, B)
+            # outputs = self.model(A, B)
+            outputs = self.model(A)
             loss = self.criterion(outputs, labels)
             if mode == 'train':
                 self.optimizer.zero_grad()

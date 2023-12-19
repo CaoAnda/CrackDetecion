@@ -3,7 +3,7 @@ from utils.Dataset import Dataset
 from tqdm import tqdm
 
 if __name__ == '__main__':
-    dataset = Dataset(mode='train', dataset_dir_paths=['./DamDataset/dataV1'], patch_size=64)
+    dataset = Dataset(mode='train', dataset_dir_paths=['./DamDataset/dataV1/dataV1'], patch_size=64)
     print(len(dataset))
     loader = torch.utils.data.DataLoader(dataset, batch_size=128, num_workers=0)
     

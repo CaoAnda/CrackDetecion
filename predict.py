@@ -6,7 +6,7 @@ from tqdm import tqdm
 
 if __name__ == '__main__':
     # 13, 20
-    image_path = "./DamDataset/dataV1/image/creak_s34.jpg"
+    image_path = "./DamDataset/dataV1/dataV1/image/creak_s34.jpg"
     box_root = './DamDataset/result/Jun02_06_33_42/box'
     # log_dir = "Nov08_08_30_07-the first try"
     
@@ -16,8 +16,8 @@ if __name__ == '__main__':
     # image_path = "DamDataset/Crack500/image/20160328_153559.jpg"
     # box_root = "DamDataset/Crack500/result/Jun02_06_33_42-filter(3)/box"
     # log_dir = "Nov09_06_22_24-Crack500-vipa-02"
-    log_dir = "Nov10_06_29_33-Crack500+weight_decay(5e-3)-star"
-    log_dir = "Nov16_13_03_45-Crack500+enhanced+cos_sim-vipa-209"
+    log_dir = "Nov23_14_47_43-True-VIPA207"
+    # log_dir = "Nov16_13_03_45-Crack500+enhanced+cos_sim-vipa-209"
     
     
     

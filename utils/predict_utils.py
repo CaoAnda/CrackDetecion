@@ -115,21 +115,21 @@ class Predicter():
             [x, y] for y in range(patch_h) for x in range(patch_w)
         ]
         list_len = len(batch_indexes_list)
-        patch_prompt = self.transform(expand_image[ymin:ymax, xmin:xmax]).unsqueeze(0)
+        # patch_prompt = self.transform(expand_image[ymin:ymax, xmin:xmax]).unsqueeze(0)
         
         for s in range(0, list_len, batch_size):
-            batchA = []
+            # batchA = []
             batchB = []
             # print(f"==>> batch_indexes_list[s:min(list_len, s + batch_size)]: {batch_indexes_list[s:min(list_len, s + batch_size)]}")
             
             for x, y in batch_indexes_list[s:min(list_len, s + batch_size)]:
                 patch_pred = self.transform(get_patch(expand_image, x, y, self.patch_size)).unsqueeze(0)
-                batchA.append(patch_prompt)
+                # batchA.append(patch_prompt)
                 batchB.append(patch_pred)
-            batchA = torch.cat(batchA, dim=0).to(self.device)
+            # batchA = torch.cat(batchA, dim=0).to(self.device)
             batchB = torch.cat(batchB, dim=0).to(self.device)
             with torch.no_grad():
-                similarities = self.model(batchA, batchB)
+                similarities = self.model(batchB)
                 # print(f"==>> similarities: {similarities}")
             for index in range(len(similarities)):
                 x, y = batch_indexes_list[s:min(list_len, s + batch_size)][index]
